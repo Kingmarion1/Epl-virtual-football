@@ -107,6 +107,12 @@ function Matches() {
 
             </div>
 
+            <Stadium>
+             <VirtualMatchViewer match={match}/>
+            </Stadium>
+
+            </div>
+
             {/* Score if finished */}
 
             {match.status === "finished" && (
