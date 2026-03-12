@@ -39,3 +39,11 @@ app.listen(PORT, () => {
 const startVirtualEngine = require("./engine/virtualEngine");
 
 startVirtualEngine();
+
+const matchRoutes = require("./routes/matchRoutes");
+const betRoutes = require("./routes/betRoutes");
+const tableRoutes = require("./routes/tableRoutes");
+
+app.use("/api/matches", matchRoutes);
+app.use("/api/bets", betRoutes);
+app.use("/api", tableRoutes);
