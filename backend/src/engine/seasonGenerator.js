@@ -64,10 +64,11 @@ const generateSeason = async () => {
 
         const secondHalf = week > 19;
 
-        const homeOdds = (1.35 + Math.random() * 3).toFixed(2);
-        const drawOdds = (2.5 + Math.random() * 2).toFixed(2);
-        const awayOdds = (1.35 + Math.random() * 3).toFixed(2);
+        const strengthDiff = home.strength - away.strength;
 
+        const homeOdds = (2 - strengthDiff / 100).toFixed(2);
+        const drawOdds = (3.2).toFixed(2);
+        const awayOdds = (2 + strengthDiff / 100).toFixed(2);
         weekMatches.push({
 
           homeTeam: secondHalf ? away : home,
