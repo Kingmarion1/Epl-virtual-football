@@ -63,6 +63,15 @@ function Matches() {
         odds,
         stake: Number(stake)
       });
+      const user = JSON.parse(localStorage.getItem("user"))
+
+localStorage.setItem(
+"user",
+JSON.stringify({
+...user,
+balance: user.balance - stake
+})
+)
 
       alert("Bet placed");
 
