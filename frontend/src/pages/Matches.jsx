@@ -11,7 +11,9 @@ function Matches() {
   const user = JSON.parse(localStorage.getItem("user"));
 
   /* LOAD CURRENT MATCHES */
-
+<div className="text-3xl text-green-400 font-bold mb-4">
+Next Round In: {countdown}s
+</div>
   const loadMatches = async () => {
 
     try {
