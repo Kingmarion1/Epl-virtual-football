@@ -8,7 +8,7 @@ function Navbar() {
 
     <div className="bg-black text-white p-3 flex justify-between">
 
-      <Link to="/matches">Virtual EPL</Link>
+      <Link to="/matches">🥅Virtual⚽Football🥅</Link>
 
       <div className="flex gap-4">
 
