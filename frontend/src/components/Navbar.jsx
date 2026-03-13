@@ -1,31 +1,41 @@
 import { Link } from "react-router-dom";
 
-function Navbar() {
+function Navbar(){
 
-  const user = JSON.parse(localStorage.getItem("user"));
+return(
 
-  return (
+<div className="bg-[#0f172a] text-white p-4 flex justify-between items-center border-b border-[#1e293b]">
 
-    <div className="bg-black text-white p-3 flex justify-between">
+<div className="font-bold text-green-400 text-lg">
 
-      <Link to="/matches">🥅Virtual⚽Football🥅</Link>
+⚽ Virtual EPL
 
-      <div className="flex gap-4">
+</div>
 
-        <Link to="/table">Table</Link>
+<div className="flex gap-6 text-sm">
 
-        <Link to="/leaderboard">Leaderboard</Link>
+<Link to="/matches" className="hover:text-green-400">
+Matches
+</Link>
 
-        <Link to="/profile">Profile</Link>
+<Link to="/table" className="hover:text-green-400">
+Table
+</Link>
 
-        {!user && <Link to="/login">Login</Link>}
+<Link to="/leaderboard" className="hover:text-green-400">
+Leaderboard
+</Link>
 
-      </div>
+<Link to="/profile" className="hover:text-green-400">
+Profile
+</Link>
 
-    </div>
+</div>
 
-  );
+</div>
+
+)
 
 }
 
-export default Navbar;
+export default Navbar
