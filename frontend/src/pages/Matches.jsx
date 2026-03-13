@@ -1,231 +1,259 @@
 import { useEffect, useState } from "react";
 import API from "../api/axios";
+import Stadium from "../components/Stadium";
+import VirtualMatchViewer from "../components/VirtualMatchViewer";
 
 function Matches() {
 
-  const [matches, setMatches] = useState([]);
-  const [week, setWeek] = useState(1);
-  const [countdown, setCountdown] = useState(60);
-  const [phase, setPhase] = useState("betting");
+const [matches,setMatches] = useState([]);
+const [countdown,setCountdown] = useState(0);
+const [phase,setPhase] = useState("betting");
+const [stake,setStake] = useState(10);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+const user = JSON.parse(localStorage.getItem("user"));
 
-  /* LOAD CURRENT MATCHES */
-<div className="text-3xl text-green-400 font-bold mb-4">
-Next Round In: {countdown}s
-</div>
-  const loadMatches = async () => {
+/* FETCH MATCHES */
 
-    try {
+useEffect(()=>{
 
-      const res = await API.get("/matches/current");
+const fetchMatches = async()=>{
 
-      setMatches(res.data.matches);
-      setWeek(res.data.week);
-      setCountdown(res.data.countdown);
-      setPhase(res.data.phase);
+try{
 
-    } catch (err) {
+const res = await API.get("/matches/current");
+setMatches(res.data.matches);
+setPhase(res.data.phase);
+setCountdown(res.data.countdown);
 
-      console.log("Error loading matches");
+}catch(err){
 
-    }
+console.log("error loading matches")
 
-  };
+}
 
-  useEffect(() => {
+}
 
-    loadMatches();
+fetchMatches();
 
-    const interval = setInterval(() => {
+},[]);
 
-      loadMatches();
 
-    }, 3000);
+/* COUNTDOWN TIMER */
 
-    return () => clearInterval(interval);
+useEffect(()=>{
 
-  }, []);
+const timer = setInterval(()=>{
 
-  /* PLACE BET */
+setCountdown(prev=>{
 
-  const placeBet = async (matchId, betType, prediction, odds) => {
+if(prev<=1){
 
-    const stake = prompt("Enter stake");
+window.location.reload();
+return 0;
 
-    if (!stake) return;
+}
 
-    try {
+return prev-1;
 
-      await API.post("/bets/place", {
-        userId: user.id,
-        matchId,
-        betType,
-        prediction,
-        odds,
-        stake: Number(stake)
-      });
-      const user = JSON.parse(localStorage.getItem("user"))
+})
+
+},1000)
+
+return ()=>clearInterval(timer)
+
+},[]);
+
+
+/* PLACE BET */
+
+const placeBet = async(matchId,prediction)=>{
+
+try{
+
+await API.post("/bets/place",{
+matchId,
+prediction,
+stake
+})
+
+const user = JSON.parse(localStorage.getItem("user"));
 
 localStorage.setItem(
 "user",
 JSON.stringify({
 ...user,
-balance: user.balance - stake
+balance:user.balance - stake
 })
+);
+
+alert("Bet placed successfully");
+
+}catch(err){
+
+alert("Bet failed")
+
+}
+
+};
+
+
+/* UI */
+
+return (
+
+<div className="min-h-screen bg-[#020617] text-white p-4">
+
+<div className="max-w-4xl mx-auto">
+
+
+{/* COUNTDOWN */}
+
+<div className="text-3xl text-green-400 font-bold mb-6 text-center">
+
+Next Round In: {countdown}s
+
+</div>
+
+
+
+{/* MATCHES */}
+
+<div className="space-y-6">
+
+{matches.map((match)=>(
+
+<div
+key={match._id}
+className="bg-[#0f172a] rounded-xl p-4 border border-[#1e293b]"
+>
+
+
+{/* TEAMS */}
+
+<div className="flex justify-between text-lg font-semibold mb-3">
+
+<span>{match.homeTeam.name}</span>
+
+<span className="text-gray-400">vs</span>
+
+<span>{match.awayTeam.name}</span>
+
+</div>
+
+
+
+{/* VIRTUAL STADIUM */}
+
+<Stadium>
+
+<VirtualMatchViewer match={match}/>
+
+</Stadium>
+
+
+
+{/* BETTING BUTTONS */}
+
+<div className="grid grid-cols-3 gap-3 mt-4">
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"home")}
+className="bg-green-600 hover:bg-green-700 p-2 rounded font-bold disabled:opacity-40"
+>
+
+1 {match.homeOdds}
+
+</button>
+
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"draw")}
+className="bg-yellow-600 hover:bg-yellow-700 p-2 rounded font-bold disabled:opacity-40"
+>
+
+X {match.drawOdds}
+
+</button>
+
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"away")}
+className="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold disabled:opacity-40"
+>
+
+2 {match.awayOdds}
+
+</button>
+
+</div>
+
+
+
+{/* OVER / UNDER */}
+
+<div className="grid grid-cols-4 gap-2 mt-3 text-sm">
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"over2.5")}
+className="bg-purple-700 p-2 rounded disabled:opacity-40"
+>
+
+OV 2.5
+
+</button>
+
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"under2.5")}
+className="bg-gray-700 p-2 rounded disabled:opacity-40"
+>
+
+UN 2.5
+
+</button>
+
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"gg")}
+className="bg-indigo-700 p-2 rounded disabled:opacity-40"
+>
+
+GG
+
+</button>
+
+
+<button
+disabled={phase !== "betting"}
+onClick={()=>placeBet(match._id,"gn")}
+className="bg-red-700 p-2 rounded disabled:opacity-40"
+>
+
+GN
+
+</button>
+
+</div>
+
+
+</div>
+
+))}
+
+</div>
+
+
+</div>
+
+</div>
+
 )
-
-      alert("Bet placed");
-
-    } catch (err) {
-
-      alert("Bet failed");
-
-    }
-
-  };
-
-  return (
-
-    <div className="min-h-screen bg-[#0f172a] text-white p-4">
-
-      <div className="max-w-4xl mx-auto">
-
-        <h1 className="text-2xl font-black mb-4">
-          EPL — WEEK: {week}
-        </h1>
-
-        <div className="mb-6 text-green-400 font-bold">
-          Phase: {phase} | Time: {countdown}s
-        </div>
-
-        {matches.map(match => (
-
-          <div
-            key={match._id}
-            className="bg-[#111827] p-4 mb-4 rounded-xl border border-gray-800"
-          >
-
-            {/* Teams */}
-
-            <div className="flex justify-between mb-3">
-
-              <span>{match.homeTeam.name}</span>
-
-              <span className="text-gray-500">🆚</span>
-
-              <span>{match.awayTeam.name}</span>
-
-            </div>
-
-            <Stadium>
-             <VirtualMatchViewer match={match}/>
-            </Stadium>
-
-            </div>
-
-            {/* Score if finished */}
-
-            {match.status === "finished" && (
-
-              <div className="text-center mb-3 text-green-400 font-bold">
-
-                {match.homeScore} - {match.awayScore}
-
-              </div>
-
-            )}
-
-            {/* 1X2 */}
-
-            <div className="grid grid-cols-3 gap-2 mb-2">
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "1X2", "home", match.homeOdds)
-                }
-                className="bg-blue-600 p-2 rounded"
-              >
-                1 ({match.homeOdds})
-              </button>
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "1X2", "draw", match.drawOdds)
-                }
-                className="bg-blue-600 p-2 rounded"
-              >
-                X ({match.drawOdds})
-              </button>
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "1X2", "away", match.awayOdds)
-                }
-                className="bg-blue-600 p-2 rounded"
-              >
-                2 ({match.awayOdds})
-              </button>
-
-            </div>
-
-            {/* OVER 2.5 */}
-
-            <div className="grid grid-cols-2 gap-2 mb-2">
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "OVER_UNDER", "over2.5", match.over25)
-                }
-                className="bg-green-700 p-2 rounded"
-              >
-                Over 2.5 ({match.over25})
-              </button>
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "OVER_UNDER", "under2.5", match.under25)
-                }
-                className="bg-green-700 p-2 rounded"
-              >
-                Under 2.5 ({match.under25})
-              </button>
-
-            </div>
-
-            {/* GG / NG */}
-
-            <div className="grid grid-cols-2 gap-2">
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "GG_NG", "gg", match.ggOdds)
-                }
-                className="bg-purple-700 p-2 rounded"
-              >
-                GG ({match.ggOdds})
-              </button>
-
-              <button
-                onClick={() =>
-                  placeBet(match._id, "GG_NG", "ng", match.ngOdds)
-                }
-                className="bg-purple-700 p-2 rounded"
-              >
-                NG ({match.ngOdds})
-              </button>
-
-            </div>
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </div>
-
-  );
 
 }
 
