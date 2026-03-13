@@ -84,7 +84,7 @@ const generateSeason = async () => {
           under15: (2 + Math.random() *2).toFixed(2),
 
           over25: (1.38 + Math.random() *3).toFixed(2),
-          under25: (1.6 + Math.random() *3,).toFixed(2),
+          under25: (1.6 + Math.random() *3).toFixed(2),
 
           over35: (2.4 + Math.random() *2).toFixed(2),
           under35: (1.5 + Math.random() *2).toFixed(2),
