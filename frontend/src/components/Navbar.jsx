@@ -8,7 +8,7 @@ return(
 
 <div className="font-bold text-green-400 text-lg">
 
-⚽ Virtual EPL
+🥅 Virtual⚽Football 🥅
 
 </div>
 
