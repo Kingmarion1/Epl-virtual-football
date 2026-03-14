@@ -61,6 +61,11 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
     });
 
+    console.log("Mounted routes:");
+app._router.stack
+  .filter(r => r.route)
+  .map(r => console.log(r.route.path));
+
   } catch (error) {
 
     console.error("Server failed to start:", error);
