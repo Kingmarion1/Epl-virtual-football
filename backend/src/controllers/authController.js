@@ -87,3 +87,8 @@ exports.profile = async (req, res) => {
   res.json(user);
 
 };
+
+module.exports = {
+  register,
+  login
+};
