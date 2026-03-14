@@ -42,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/bets", betRoutes);
 app.use("/api/table", tableRoutes);
+app.use("/api/leaderboard", tableRoutes);
 
 /* ---------------- START SERVER ---------------- */
 
