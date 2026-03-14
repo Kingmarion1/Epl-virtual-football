@@ -42,8 +42,8 @@ app.get("/api/health", (req, res) => {
 app.use("/api/", apiLimiter);           // General limit
 app.use("/api/bets/place", betLimiter); // Strict limit for betting
 app.use("/api/auth", authRoutes);
-app.use("/api/matches/current", matchRoutes);
-app.use("/api/bets/place", betRoutes);
+app.use("/api/matches", matchRoutes);
+app.use("/api/bets", betRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/leaderboard", tableRoutes);
 
