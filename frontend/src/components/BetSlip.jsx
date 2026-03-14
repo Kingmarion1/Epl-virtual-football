@@ -13,36 +13,76 @@ function BetSlip({ selections, clear }) {
 
   const placeBet = async () => {
 
-    for (const bet of selections) {
-
-      await API.post("/bets/place", {
-        userId: user._id,
-        matchId: bet.matchId,
-        betType: bet.betType,
-        prediction: bet.prediction,
-        odds: bet.odds,
-        stake
-      });
-
+    if (stake <= 0) {
+      alert("Enter a valid stake");
+      return;
     }
 
-    alert("Bet placed");
+    if (stake > user.balance) {
+      alert("Insufficient balance");
+      return;
+    }
 
-    clear();
+    try {
+
+      for (const bet of selections) {
+
+        await API.post("/bets/place", {
+          userId: user._id,
+          matchId: bet.matchId,
+          betType: bet.betType,
+          prediction: bet.prediction,
+          odds: bet.odds,
+          stake
+        });
+
+      }
+
+      const updatedUser = {
+        ...user,
+        balance: user.balance - stake
+      };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      alert("Bet placed successfully");
+
+      clear();
+      setStake(0);
+
+    } catch (err) {
+
+      alert("Bet failed");
+
+    }
 
   };
 
   return (
 
-    <div className="bg-gray-900 text-white p-4 w-72 fixed right-0 top-0 h-screen">
+    <div className="fixed bottom-0 left-0 right-0 md:right-0 md:left-auto md:top-0 md:h-screen md:w-80 bg-[#020617] border-t md:border-l border-gray-800 text-white p-4 z-50">
 
-      <h2 className="font-bold mb-3">Bet Slip</h2>
+      <h2 className="font-bold text-lg mb-3 text-green-400">
+        Bet Slip
+      </h2>
+
+      {selections.length === 0 && (
+        <p className="text-gray-500 text-sm">
+          No selections yet
+        </p>
+      )}
 
       {selections.map((s, i) => (
 
-        <div key={i} className="text-sm border-b py-2">
+        <div key={i} className="text-sm border-b border-gray-800 py-2">
 
-          {s.team} - {s.prediction} ({s.odds})
+          <div className="font-semibold">
+            {s.team}
+          </div>
+
+          <div className="text-gray-400">
+            {s.prediction} @ {s.odds}
+          </div>
 
         </div>
 
@@ -50,28 +90,41 @@ function BetSlip({ selections, clear }) {
 
       <input
         type="number"
-        placeholder="Stake"
-        className="w-full p-2 text-black mt-3"
-        onChange={(e) => setStake(e.target.value)}
+        placeholder="Enter Stake"
+        className="w-full p-2 mt-3 rounded bg-black border border-gray-700"
+        value={stake}
+        onChange={(e) => setStake(Number(e.target.value))}
       />
 
-      <div className="mt-3 text-sm">
+      <div className="mt-3 text-sm flex justify-between">
 
-        Odds: {totalOdds.toFixed(2)}
+        <span>Total Odds</span>
+
+        <span>{totalOdds.toFixed(2)}</span>
 
       </div>
 
-      <div className="text-green-400">
+      <div className="text-green-400 flex justify-between font-bold">
 
-        Win: {potentialWin.toFixed(2)}
+        <span>Potential Win</span>
+
+        <span>${potentialWin.toFixed(2)}</span>
 
       </div>
 
       <button
+        disabled={stake <= 0 || selections.length === 0}
         onClick={placeBet}
-        className="bg-green-600 w-full p-2 mt-3"
+        className="bg-green-600 w-full p-3 mt-3 rounded disabled:bg-gray-700 font-bold"
       >
         Place Bet
+      </button>
+
+      <button
+        onClick={clear}
+        className="w-full mt-2 text-sm text-red-400"
+      >
+        Clear Slip
       </button>
 
     </div>
