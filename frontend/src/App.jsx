@@ -11,6 +11,8 @@ import BalanceBar from "./components/BalanceBar";
 
 import Navbar from "./components/Navbar";
 
+import BetSlip from "./components/BetSlip";
+
 function App() {
 
   return (
@@ -33,6 +35,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
 
       </Routes>
+      <BetSlip />
 
     </BrowserRouter>
 
