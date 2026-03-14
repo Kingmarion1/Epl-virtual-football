@@ -11,7 +11,7 @@ let countdown = 60;
 
 const settleBets = async (week) => {
 
-  const bets = await Bet.find({ status: "pending" }).populate("match user");
+  const bets = await Bet.find({ status: "pending" }).populate("match user").where("match.matchweek").equals(week);
 
   for (const bet of bets) {
 
@@ -163,7 +163,7 @@ const startVirtualEngine = async () => {
 
     }
 
-  }, 1000);
+  }, 5000);
 
 };
 
