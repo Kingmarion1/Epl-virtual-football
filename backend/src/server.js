@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const connectDB = require("./config/database");
 
+const { betLimiter, apiLimiter } = require("./middleware/rateLimiter");
 const authRoutes = require("./routes/authRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const betRoutes = require("./routes/betRoutes");
@@ -38,9 +39,11 @@ app.get("/api/health", (req, res) => {
 
 /* ---------------- API ROUTES ---------------- */
 
-app.use("/api/auth", authRoutes);
+app.use("/api/", apiLimiter);           // General limit
+app.use("/api/bets/place", betLimiter); // Strict limit for betting
+app.use("/api/auth/{ Register, Login }", authRoutes);
 app.use("/api/matches/current", matchRoutes);
-app.use("/api/bets", betRoutes);
+app.use("/api/bets/place", betRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/leaderboard", tableRoutes);
 
