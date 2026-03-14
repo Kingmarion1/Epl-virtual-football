@@ -7,6 +7,8 @@ import Standings from "./pages/Standings";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
 
+import BalanceBar from "./components/BalanceBar";
+
 import Navbar from "./components/Navbar";
 
 function App() {
@@ -14,7 +16,8 @@ function App() {
   return (
 
     <BrowserRouter>
-
+      
+      <BalanceBar />
       <Navbar />
 
       <Routes>
