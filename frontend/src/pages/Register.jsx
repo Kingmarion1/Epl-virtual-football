@@ -1,74 +1,119 @@
 import { useState } from "react";
-import API from "../api/axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Auth.css";
 
-function Register(){
+function Register() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-const [username,setUsername] = useState("");
-const [email,setEmail] = useState("");
-const [password,setPassword] = useState("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-const register = async(e)=>{
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
-e.preventDefault();
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
 
-await API.post("/auth/register",{username,email,password});
+    setLoading(true);
 
-window.location.href="/login";
+    try {
+      await register(username, email, password);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-};
-
-return(
-
-<div className="min-h-screen bg-[#020617] flex items-center justify-center text-white p-6">
-
-<div className="w-full max-w-md">
-
-<h1 className="text-3xl font-black text-center text-green-400 mb-2">
-🥅 Join Virtual⚽EPL Football 🥅 
-</h1>
-
-<p className="text-center text-gray-400 text-sm mb-6">
-Create your Epl Football account and start predicting matches. Beat the ODDS.
-</p>
-
-<form onSubmit={register} className="bg-[#0f172a] p-6 rounded-xl border border-gray-800">
-
-<input
-placeholder="Username"
-className="w-full mb-3 p-3 rounded bg-black border border-gray-700"
-onChange={(e)=>setUsername(e.target.value)}
-/>
-
-<input
-placeholder="Email"
-className="w-full mb-3 p-3 rounded bg-black border border-gray-700"
-onChange={(e)=>setEmail(e.target.value)}
-/>
-
-<input
-type="password"
-placeholder="Password"
-className="w-full mb-4 p-3 rounded bg-black border border-gray-700"
-onChange={(e)=>setPassword(e.target.value)}
-/>
-
-<button className="w-full bg-green-600 py-3 rounded font-bold">
-Create Account
-</button>
-
-</form>
-
-<p className="text-xs text-gray-500 text-center mt-6">
-This platform carries a professional football betting experience.
-All credits are virtual and cannot be withdrawn.
-</p>
-
-</div>
-
-</div>
-
-)
-
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1>🥅 Virtual EPL FOOTBALL 🥅</h1>
+        <p className="subtitle">Create your account to start betting.</p>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={loading}
+              minLength={3}
+            />
+          </div>
+          
+          <div className="form-group">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+          
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              minLength={6}
+            />
+          </div>
+          
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={loading}
+          >
+            {loading ? "Creating account..." : "Register"}
+          </button>
+        </form>
+        
+        <p className="auth-link">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+        
+        <p className="disclaimer">
+          Virtual instant football betting only. Developed for entertainment purposes only.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default Register;
