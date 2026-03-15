@@ -1,0 +1,125 @@
+.match-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s;
+}
+
+.match-card:hover {
+  transform: translateY(-5px);
+}
+
+.match-card.finished {
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.match-teams {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.team-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary);
+  background: rgba(42, 82, 152, 0.1);
+  padding: 5px 20px;
+  border-radius: 8px;
+}
+
+.vs {
+  font-weight: bold;
+  color: #999;
+  font-size: 0.9rem;
+  padding: 0 20px;
+}
+
+.odds-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.odds-section {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.odds-section h4 {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.odds-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.odds-buttons button {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px;
+  border: 2px solid var(--primary);
+  background: white;
+  color: var(--primary);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.odds-buttons button:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.odds-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ccc;
+}
+
+.match-result {
+  text-align: center;
+  padding: 15px;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .match-teams {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .vs {
+    padding: 10px 0;
+  }
+}
