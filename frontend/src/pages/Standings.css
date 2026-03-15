@@ -1,0 +1,68 @@
+.standings-page {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.standings-page h2 {
+  color: white;
+  margin-bottom: 30px;
+  text-align: center;
+  font-size: 2rem;
+}
+
+.standings-table {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border-collapse: collapse;
+}
+
+.standings-table th {
+  background: var(--primary);
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.standings-table td {
+  padding: 15px 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.standings-table tr:hover {
+  background: #f8f9fa;
+}
+
+.standings-table tr.top-four {
+  background: rgba(255, 215, 0, 0.1);
+  font-weight: 600;
+}
+
+.standings-table tr.top-four td:first-child {
+  color: var(--gold);
+  font-weight: bold;
+}
+
+.points {
+  font-weight: bold;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .standings-table {
+    font-size: 0.8rem;
+  }
+  
+  .standings-table th,
+  .standings-table td {
+    padding: 10px 5px;
+  }
+}
