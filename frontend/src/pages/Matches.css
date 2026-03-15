@@ -1,0 +1,75 @@
+.matches-page {
+  padding: 20px 0;
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 0 10px;
+}
+
+.match-header h2 {
+  color: white;
+  font-size: 2rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.phase-badge {
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.phase-badge.betting {
+  background: var(--success);
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.phase-badge.playing {
+  background: var(--warning);
+  color: #333;
+}
+
+.phase-badge.results {
+  background: var(--info);
+  color: white;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.phase-notice {
+  background: rgba(255, 193, 7, 0.2);
+  border: 2px solid var(--warning);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .matches-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .match-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  }
