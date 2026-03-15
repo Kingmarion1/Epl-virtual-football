@@ -1,18 +1,28 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://epl-instant-football-kaeu.onrender.com/api"
+  baseURL: "https://epl-instant-football-kaeu.onrender.com/api",
 });
 
-API.interceptors.request.use((req) => {
-
+// Add token to every request
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-
   if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
-
-  return req;
+  return config;
 });
+
+// Handle token expiration
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;
