@@ -7,9 +7,8 @@ import Standings from "./pages/Standings";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
 
-import BalanceBar from "./components/BalanceBar";
-
 import Navbar from "./components/Navbar";
+import BalanceBar from "./components/BalanceBar";
 
 import BetSlip from "./components/BetSlip";
 
@@ -19,8 +18,8 @@ function App() {
 
     <BrowserRouter>
       
-      <BalanceBar />
       <Navbar />
+      <BalanceBar />
 
       <Routes>
 
@@ -35,6 +34,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
 
       </Routes>
+      
       <BetSlip />
 
     </BrowserRouter>
