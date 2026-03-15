@@ -17,7 +17,12 @@ const app = express();
 
 /* ---------------- MIDDLEWARE ---------------- */
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://epl-virtual-football.vercel.app", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 
 /* ---------------- ROOT ROUTE ---------------- */
