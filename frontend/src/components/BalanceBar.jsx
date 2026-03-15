@@ -1,41 +1,23 @@
-import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import "./BalanceBar.css";
 
-function BalanceBar(){
+function BalanceBar() {
+  const { user, isAuthenticated } = useAuth();
 
-const [user,setUser] = useState(null);
+  if (!isAuthenticated) return null;
 
-useEffect(()=>{
-
-const stored = localStorage.getItem("user");
-
-if(stored){
-setUser(JSON.parse(stored));
-}
-
-},[]);
-
-if(!user) return null;
-
-return(
-
-<div className="fixed top-3 right-3 z-50">
-
-<div className="bg-[#020617]/90 backdrop-blur-md border border-green-600/40 px-4 py-2 rounded-xl shadow-lg">
-
-<div className="text-[10px] text-gray-400 uppercase">
-Balance💰:
-</div>
-
-<div className="text-green-400 font-bold text-lg">
-${user.balance.toLocaleString()}
-</div>
-
-</div>
-
-</div>
-
-)
-
+  return (
+    <div className="balance-bar">
+      <div className="balance-info">
+        <span className="balance-label">Balance:</span>
+        <span className="balance-amount">${user?.balance?.toLocaleString()}</span>
+      </div>
+      <div className="user-stats">
+        <span>W: {user?.wins || 0}</span>
+        <span>L: {user?.losses || 0}</span>
+      </div>
+    </div>
+  );
 }
 
 export default BalanceBar;
