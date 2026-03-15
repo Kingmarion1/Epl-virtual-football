@@ -163,7 +163,7 @@ const startVirtualEngine = async () => {
 
     }
 
-  }, 5000);
+  }, 1300);
 
 };
 
