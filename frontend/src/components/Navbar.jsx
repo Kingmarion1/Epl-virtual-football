@@ -1,41 +1,42 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Navbar.css";
 
-function Navbar(){
+function Navbar() {
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-return(
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
-<div className="bg-[#0f172a] text-white p-4 flex justify-between items-center border-b border-[#1e293b]">
-
-<div className="font-bold text-green-400 text-lg">
-
-🥅 Virtual⚽Football 🥅
-
-</div>
-
-<div className="flex gap-6 text-sm">
-
-<Link to="/matches" className="hover:text-green-400">
-Matches
-</Link>
-
-<Link to="/table" className="hover:text-green-400">
-Table
-</Link>
-
-<Link to="/leaderboard" className="hover:text-green-400">
-Leaderboard
-</Link>
-
-<Link to="/profile" className="hover:text-green-400">
-Profile
-</Link>
-
-</div>
-
-</div>
-
-)
-
+  return (
+    <nav className="navbar">
+      <div className="nav-brand">
+        <Link to="/">🥅EPL⚽Football 🥅</Link>
+      </div>
+      
+      <div className="nav-links">
+        {isAuthenticated ? (
+          <>
+            <Link to="/">Matches</Link>
+            <Link to="/standings">Standings</Link>
+            <Link to="/leaderboard">Leaderboard</Link>
+            <Link to="/profile">Profile</Link>
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </>
+        )}
+      </div>
+    </nav>
+  );
 }
 
-export default Navbar
+export default Navbar;
