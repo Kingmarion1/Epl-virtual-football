@@ -15,13 +15,13 @@ function Matches() {
 
   useEffect(() => {
     fetchMatches();
-    const interval = setInterval(fetchMatches, 5000); // Refresh every 5s
+    const interval = setInterval(fetchMatches, 1000); // Refresh every 5s
     return () => clearInterval(interval);
   }, []);
 
   const fetchMatches = async () => {
     try {
-      const res = await API.get("/matches/current");
+      const res = await API.get("/matches");
       setMatches(res.data.matches || []);
       setPhase(res.data.phase || "betting");
       setCountdown(res.data.countdown || 60);
