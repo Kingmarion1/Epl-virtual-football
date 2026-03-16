@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://epl-instant-football-kaeu.onrender.com/api",
+  baseURL: "https://epl-virtual-football.onrender.com/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json"
