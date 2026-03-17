@@ -3,7 +3,7 @@ const rateLimit = require("express-rate-limit");
 // Strict limit for betting (financial operations)
 const betLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 5, // 5 bets per minute per IP
+    max: 7, // 7 bets per minute per IP
     message: {
         success: false,
         message: "Too many bets placed. Please slow down."
@@ -14,8 +14,8 @@ const betLimiter = rateLimit({
 
 // General API limit
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
+    windowMs: 20 * 60 * 1000, // 20 minutes
+    max: 200,
     message: {
         success: false,
         message: "Too many requests from this IP"
