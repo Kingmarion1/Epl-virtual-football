@@ -6,10 +6,9 @@ const SeasonState = require("../models/SeasonState");
 // GET /api/matches/current - Current week matches
 router.get("/current", async (req, res) => {
   try {
-    // Get season state
+    // Get or create season state
     let state = await SeasonState.findOne();
     
-    // Auto-create if missing
     if (!state) {
       state = await SeasonState.create({
         currentWeek: 1,
@@ -19,27 +18,34 @@ router.get("/current", async (req, res) => {
       });
     }
 
-    // Get matches with full team details
+    // Get matches with FULL team data
     const matches = await Match.find({ 
       matchweek: state.currentWeek 
     })
-    .populate("homeTeam", "name strength played wins draws losses points")
-    .populate("awayTeam", "name strength played wins draws losses points")
-    .lean()
-    .sort({ _id: 1 });
+    .populate("homeTeam", "name strength played wins points")  // Added stats
+    .populate("awayTeam", "name strength played wins points")
+    .lean();
 
-    // If no matches, season might not be generated
-    if (matches.length === 0 && !state.seasonStarted) {
-      return res.status(503).json({
-        success: false,
-        message: "Season not yet generated. Please wait...",
-        state: {
-          week: state.currentWeek,
-          phase: state.phase,
-          seasonStarted: state.seasonStarted
-        }
-      });
-    }
+    // Format response for frontend
+    const formattedMatches = matches.map(m => ({
+      _id: m._id,
+      homeTeam: m.homeTeam || { name: "TBD", strength: 0 },
+      awayTeam: m.awayTeam || { name: "TBD", strength: 0 },
+      matchweek: m.matchweek,
+      status: m.status || "upcoming",
+      homeScore: m.homeScore || 0,
+      awayScore: m.awayScore || 0,
+      // ALL ODDS - make sure these match your schema
+      odds: {
+        home: m.homeOdds || 1.5,
+        draw: m.drawOdds || 3.5,
+        away: m.awayOdds || 1.5,
+        over25: m.over25 || 1.8,
+        under25: m.under25 || 1.9,
+        gg: m.ggOdds || 1.7,
+        ng: m.ngOdds || 1.8
+      }
+    }));
 
     res.json({
       success: true,
@@ -49,26 +55,7 @@ router.get("/current", async (req, res) => {
         countdown: state.countdown,
         seasonStarted: state.seasonStarted,
         matchCount: matches.length,
-        matches: matches.map(m => ({
-          _id: m._id,
-          homeTeam: m.homeTeam,
-          awayTeam: m.awayTeam,
-          matchweek: m.matchweek,
-          status: m.status,
-          scores: m.status === "finished" ? {
-            home: m.homeScore,
-            away: m.awayScore
-          } : null,
-          odds: {
-            home: m.homeOdds,
-            draw: m.drawOdds,
-            away: m.awayOdds,
-            over25: m.over25,
-            under25: m.under25,
-            gg: m.ggOdds,
-            ng: m.ngOdds
-          }
-        }))
+        matches: formattedMatches
       }
     });
 
@@ -77,51 +64,35 @@ router.get("/current", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to load matches",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      error: error.message
     });
   }
 });
 
-// GET /api/matches/all - All matches (debug)
-router.get("/all", async (req, res) => {
+// GET /api/matches/live - Get live scores (for polling)
+router.get("/live", async (req, res) => {
   try {
-    const matches = await Match.find()
-      .populate("homeTeam", "name")
-      .populate("awayTeam", "name")
-      .lean();
+    const state = await SeasonState.findOne();
     
-    res.json({
-      success: true,
-      count: matches.length,
-      matches
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+    const matches = await Match.find({
+      matchweek: state?.currentWeek || 1,
+      status: { $in: ["playing", "finished"] }
+    })
+    .populate("homeTeam", "name")
+    .populate("awayTeam", "name")
+    .lean();
 
-// GET /api/matches/week/:week - Specific week
-router.get("/week/:week", async (req, res) => {
-  try {
-    const week = parseInt(req.params.week);
-    
-    if (week < 1 || week > 38) {
-      return res.status(400).json({
-        success: false,
-        message: "Week must be between 1 and 38"
-      });
-    }
-    
-    const matches = await Match.find({ matchweek: week })
-      .populate("homeTeam", "name")
-      .populate("awayTeam", "name")
-      .lean();
-    
     res.json({
       success: true,
-      week,
-      count: matches.length,
-      matches
+      phase: state?.phase || "betting",
+      matches: matches.map(m => ({
+        _id: m._id,
+        homeTeam: m.homeTeam?.name,
+        awayTeam: m.awayTeam?.name,
+        homeScore: m.homeScore,
+        awayScore: m.awayScore,
+        status: m.status
+      }))
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
