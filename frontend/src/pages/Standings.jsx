@@ -13,7 +13,7 @@ function Standings() {
   const fetchStandings = async () => {
     try {
       const res = await API.get("/table");
-      setTeams(res.data.teams || []);
+      setTeams(res.data.table || []);
     } catch (err) {
       console.error("Failed to fetch standings");
     } finally {
