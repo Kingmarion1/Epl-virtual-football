@@ -14,7 +14,7 @@ const betLimiter = rateLimit({
 
 // General API limit
 const apiLimiter = rateLimit({
-    windowMs: 20 * 60 * 1000, // 20 minutes
+    windowMs: 60 * 1000, // 1 minutes
     max: 200,
     message: {
         success: false,
