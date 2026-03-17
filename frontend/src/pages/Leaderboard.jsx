@@ -12,7 +12,7 @@ function Leaderboard() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await API.get("/leaderboard");
+      const res = await API.get("/table/leaderboard");
       setUsers(res.data.users || []);
     } catch (err) {
       console.error("Failed to fetch leaderboard");
