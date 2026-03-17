@@ -15,16 +15,16 @@ function Matches() {
 
   useEffect(() => {
     fetchMatches();
-    const interval = setInterval(fetchMatches, 1000); // Refresh every 5s
+    const interval = setInterval(fetchMatches, 1000); // Refresh every 1s
     return () => clearInterval(interval);
   }, []);
 
   const fetchMatches = async () => {
     try {
-      const res = await API.get("/matches");
-      setMatches(res.data.matches || []);
-      setPhase(res.data.phase || "betting");
-      setCountdown(res.data.countdown || 60);
+      const res = await API.get("/matches/current");
+      setMatches(res.data.data.matches || []);
+      setPhase(res.data.data.phase || "betting");
+      setCountdown(res.data.data.countdown || 60);
     } catch (err) {
       setError("Failed to load matches");
     } finally {
