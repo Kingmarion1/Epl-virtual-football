@@ -1,7 +1,7 @@
 .navbar {
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
-  padding: 15px 30px;
+  padding: 8px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -12,7 +12,7 @@
 }
 
 .nav-brand a {
-  font-size: 1.5rem;
+  font-size: 0.8rem;
   font-weight: bold;
   color: white;
   text-decoration: none;
@@ -20,7 +20,7 @@
 
 .nav-links {
   display: flex;
-  gap: 25px;
+  gap: 13px;
   align-items: center;
 }
 
@@ -55,7 +55,7 @@
   background: var(--danger);
   color: white;
   border: none;
-  padding: 8px 20px;
+  padding: 4px 20px;
   border-radius: 20px;
   font-weight: 600;
   cursor: pointer;
@@ -67,7 +67,7 @@
   transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 384px) {
   .navbar {
     flex-direction: column;
     gap: 15px;
