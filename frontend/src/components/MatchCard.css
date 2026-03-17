@@ -1,19 +1,14 @@
 .match-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
+  background: white;
+  border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s;
-}
-
-.match-card:hover {
-  transform: translateY(-5px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .match-card.finished {
-  opacity: 0.8;
-  background: rgba(255, 255, 255, 0.9);
+  opacity: 0.9;
+  background: #f8f9fa;
 }
 
 .match-teams {
@@ -26,48 +21,50 @@
 }
 
 .team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  text-align: center;
   flex: 1;
 }
 
 .team-name {
+  display: block;
   font-weight: bold;
   font-size: 1.1rem;
-  text-align: center;
+  margin-bottom: 5px;
+}
+
+.strength {
+  font-size: 0.8rem;
+  color: #666;
 }
 
 .score {
+  display: block;
   font-size: 2rem;
   font-weight: bold;
-  color: var(--primary);
-  background: rgba(42, 82, 152, 0.1);
-  padding: 5px 20px;
-  border-radius: 8px;
+  color: #2a5298;
+  margin-top: 10px;
 }
 
 .vs {
+  text-align: center;
+  padding: 0 20px;
   font-weight: bold;
   color: #999;
-  font-size: 0.9rem;
-  padding: 0 20px;
 }
 
-.odds-grid {
+.final-score {
+  font-size: 1.5rem;
+  color: #2a5298;
+  margin-top: 10px;
+}
+
+.odds-container {
   display: grid;
   gap: 15px;
 }
 
-.odds-section {
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
-}
-
 .odds-section h4 {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #666;
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -75,51 +72,48 @@
 
 .odds-buttons {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.odds-buttons button {
+.odd-btn {
   flex: 1;
-  min-width: 80px;
+  display: flex;
+  flex-direction: column;
   padding: 10px;
-  border: 2px solid var(--primary);
+  border: 2px solid #2a5298;
   background: white;
-  color: var(--primary);
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.3s;
 }
 
-.odds-buttons button:hover:not(:disabled) {
-  background: var(--primary);
+.odd-btn:hover:not(:disabled) {
+  background: #2a5298;
   color: white;
 }
 
-.odds-buttons button:disabled {
+.odd-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   border-color: #ccc;
 }
 
-.match-result {
-  text-align: center;
-  padding: 15px;
-  background: var(--primary);
-  color: white;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1.1rem;
+.odd-btn .label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
 }
 
-@media (max-width: 768px) {
-  .match-teams {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .vs {
-    padding: 10px 0;
-  }
+.odd-btn .value {
+  font-size: 1.1rem;
+  font-weight: bold;
 }
+
+.match-result {
+  margin-top: 15px;
+  padding: 10px;
+  background: #2a5298;
+  color: white;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: bold;
+    }
