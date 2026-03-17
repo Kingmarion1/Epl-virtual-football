@@ -14,8 +14,8 @@ const betLimiter = rateLimit({
 
 // General API limit
 const apiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minutes
-    max: 200,
+    windowMs: 2 * 60 * 1000, // 2 minutes
+    max: 100,
     message: {
         success: false,
         message: "Too many requests from this IP"
