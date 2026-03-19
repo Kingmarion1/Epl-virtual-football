@@ -18,7 +18,8 @@ function Matches() {
 
   useEffect(() => {
     fetchMatches();
-    const interval = setInterval(fetchMatches, 1000); 
+    // 3s interval protects your Render backend from 'Too Many Requests'
+    const interval = setInterval(fetchMatches, 3000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -35,26 +36,28 @@ function Matches() {
     }
   };
 
-  // HANDLES ADDING/REMOVING FROM SLIP
+  // NEW: Individual Remove Function
+  const removeFromSlip = (matchId, prediction) => {
+    setBetSlip(prev => prev.filter(s => !(s.matchId === matchId && s.prediction === prediction)));
+  };
+
+  // TOGGLE LOGIC (Keeps the 'matchId' key consistent)
   const toggleSelection = (selection) => {
     setBetSlip(prev => {
-      // If clicking the same match + same prediction, remove it
       const exists = prev.find(s => s.matchId === selection.matchId && s.prediction === selection.prediction);
       if (exists) return prev.filter(s => !(s.matchId === selection.matchId && s.prediction === selection.prediction));
       
-      // If clicking a different prediction for the same match, swap it
       const sameMatch = prev.find(s => s.matchId === selection.matchId);
       if (sameMatch) {
         return prev.map(s => s.matchId === selection.matchId ? selection : s);
       }
-
-      // Otherwise, add new selection
       return [...prev, selection];
     });
   };
 
   const calculateTotalOdds = () => {
-    return betSlip.reduce((acc, s) => acc * s.odds, 1).toFixed(2);
+    const total = betSlip.reduce((acc, s) => acc * s.odds, 1);
+    return parseFloat(total.toFixed(2));
   };
 
   const handlePlaceBet = async () => {
@@ -65,29 +68,29 @@ function Matches() {
     try {
       const totalOdds = calculateTotalOdds();
       const payload = {
+        // HANDSHAKE FIX: Sending matchId as 'match' for the Backend
         selections: betSlip.map(s => ({
-          match: s.match,
+          match: s.matchId, 
           betType: s.betType,
           prediction: s.prediction,
-          odds: s.odds
+          odds: Number(s.odds)
         })),
         stake: Number(stake),
         totalOdds: Number(totalOdds),
-        potentialWin: Number(stake) * Number(totalOdds)
+        potentialWin: Number((Number(stake) * totalOdds).toFixed(2))
       };
 
-      const res = await API.post("/bets/place", payload);
+      const res = await API.post("/bets", payload);
       
-      // Update UI
       updateBalance(res.data.user.newBalance);
       setBetSlip([]);
       setStake("");
-      alert("🔥 Bet Placed! Good luck!");
+      alert("🔥 Bet Placed! Check the leaderboard!");
     } catch (err) {
-    // This will tell us EXACTLY what the backend didn't like
-    alert(`Error: ${err.response?.data?.message || "Something went wrong"}`);
-  }
-};
+      console.error("Payload Error:", err.response?.data);
+      alert(`Error: ${err.response?.data?.message || "Something went wrong"}`);
+    }
+  };
   
   if (loading) return <div className="loading">Loading Stadium...</div>;
 
@@ -102,9 +105,7 @@ function Matches() {
         </div>
 
         {phase !== "betting" && (
-          <div className="phase-notice">
-            The whistle has blown! Betting is closed for this round.
-          </div>
+          <div className="phase-notice">Betting closed for this round. Stay tuned!</div>
         )}
 
         <div className="matches-grid">
@@ -124,8 +125,8 @@ function Matches() {
       {betSlip.length > 0 && (
         <div className="bet-slip">
           <div className="slip-header">
-            <h3>Bet Slip</h3>
-            <button className="clear-btn" onClick={() => setBetSlip([])}>Clear</button>
+            <h3>Your Picks ({betSlip.length})</h3>
+            <button className="clear-btn" onClick={() => setBetSlip([])}>Clear All</button>
           </div>
           
           <div className="slip-items">
@@ -133,9 +134,17 @@ function Matches() {
               <div key={idx} className="slip-item">
                 <div className="slip-item-top">
                   <strong>{s.prediction.toUpperCase()}</strong>
-                  <span className="slip-odds">@{s.odds}</span>
+                  <div className="slip-right-group">
+                    <span className="slip-odds">@{s.odds}</span>
+                    <button 
+                      className="remove-item-btn" 
+                      onClick={() => removeFromSlip(s.matchId, s.prediction)}
+                    >
+                      &times;
+                    </button>
+                  </div>
                 </div>
-                <p>{s.teams}</p>
+                <p className="slip-match-name">{s.teams}</p>
               </div>
             ))}
           </div>
@@ -153,14 +162,15 @@ function Matches() {
             )}
             <input 
               type="number" 
-              placeholder="Stake Amount ($)" 
+              placeholder="Stake ($)" 
               value={stake} 
               onChange={(e) => setStake(e.target.value)}
+              className="stake-input"
             />
             <button 
               className="place-bet-btn" 
               onClick={handlePlaceBet}
-              disabled={phase !== "betting"}
+              disabled={phase !== "betting" || !stake || stake < 1}
             >
               PLACE {betSlip.length > 1 ? "ACCUMULATOR" : "BET"}
             </button>
@@ -172,4 +182,4 @@ function Matches() {
 }
 
 export default Matches;
-         
+      
