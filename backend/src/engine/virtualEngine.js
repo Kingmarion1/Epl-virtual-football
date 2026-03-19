@@ -45,25 +45,31 @@ const settleBetsForWeek = async (week) => {
       .populate("user");
 
     if (pendingBets.length === 0) return { settled: 0 };
-
+    
     const settlementPromises = pendingBets.map(async (bet) => {
-      // Safety checks
-      if (!bet.match || bet.match.matchweek !== week || bet.match.status !== "finished") return;
+  // 1. Check if ALL matches in this bet are finished
+    const allMatchesFinished = bet.selections.every(s => s.match && s.match.status === "finished");
+  
+  // 2. Only process if the whole ticket is ready
+    if (!allMatchesFinished) return;
 
-      const isWin = determineBetResult(bet, bet.match);
-      
-      if (isWin) {
-        bet.status = "won";
-        bet.user.balance += bet.potentialWin;
-        bet.user.wins += 1;
-      } else {
-        bet.status = "lost";
-        bet.user.losses += 1;
-      }
+  // 3. Check every selection in the accumulator
+    const allSelectionsWon = bet.selections.every(selection => {
+    return determineBetResult(selection, selection.match);
+  });
 
-      // Save both documents in parallel for speed
-      return Promise.all([bet.user.save(), bet.save()]);
-    });
+  // 4. Update the bet status
+  if (allSelectionsWon) {
+    bet.status = "won";
+    bet.user.balance += bet.potentialWin;
+    bet.user.wins += 1;
+  } else {
+    bet.status = "lost";
+    bet.user.losses += 1;
+  }
+
+  return Promise.all([bet.user.save(), bet.save()]);
+});
 
     const results = await Promise.all(settlementPromises);
     const settledCount = results.filter(r => r !== undefined).length;
