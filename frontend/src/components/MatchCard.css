@@ -1,14 +1,21 @@
 .match-card {
-  background: white;
+  background: #1e293b; /* Sleek dark blue/grey */
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.match-card:hover {
+  border-color: #3b82f6; /* Highlight border on hover */
 }
 
 .match-card.finished {
-  opacity: 0.9;
-  background: #f8f9fa;
+  opacity: 0.8;
+  background: #0f172a;
+  border-color: #1e293b;
 }
 
 .match-teams {
@@ -17,7 +24,7 @@
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 2px solid #eee;
+  border-bottom: 1px solid #334155;
 }
 
 .team {
@@ -27,35 +34,50 @@
 
 .team-name {
   display: block;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 1.1rem;
+  color: #f8fafc;
   margin-bottom: 5px;
 }
 
 .strength {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: #334155;
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 
 .score {
   display: block;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #2a5298;
-  margin-top: 10px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #3b82f6;
+  margin-top: 5px;
 }
 
 .vs {
   text-align: center;
-  padding: 0 20px;
-  font-weight: bold;
-  color: #999;
+  padding: 0 15px;
+  font-weight: 900;
+  color: #64748b;
+  font-style: italic;
 }
 
-.final-score {
-  font-size: 1.5rem;
-  color: #2a5298;
-  margin-top: 10px;
+.live-badge {
+  background: #ef4444; /* Google Red */
+  color: white;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 .odds-container {
@@ -64,10 +86,11 @@
 }
 
 .odds-section h4 {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 8px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 10px;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .odds-buttons {
@@ -79,41 +102,62 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 10px;
-  border: 2px solid #2a5298;
-  background: white;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #cbd5e1;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.odd-btn:hover:not(:disabled) {
-  background: #2a5298;
+/* --- THE KEY ADDITION FOR ACCUMULATORS --- */
+.odd-btn.active {
+  background: #3b82f6 !important; /* Bright Blue */
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.odd-btn:hover:not(:disabled):not(.active) {
+  background: #1e293b;
+  border-color: #64748b;
   color: white;
 }
 
 .odd-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  border-color: #ccc;
+  filter: grayscale(1);
 }
 
 .odd-btn .label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-bottom: 2px;
+  opacity: 0.8;
 }
 
 .odd-btn .value {
   font-size: 1.1rem;
-  font-weight: bold;
+  font-weight: 700;
+  color: #fbbf24; /* Golden Odds */
+}
+
+.odd-btn.active .value {
+  color: white; /* Make text white when active */
 }
 
 .match-result {
   margin-top: 15px;
-  padding: 10px;
-  background: #2a5298;
+  padding: 12px;
+  background: #3b82f6;
   color: white;
   text-align: center;
   border-radius: 8px;
-  font-weight: bold;
-    }
+  font-weight: 700;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  
