@@ -1,155 +1,174 @@
-import { useState } from "react";
-import "./MatchCard.css";
+import { useEffect, useState } from "react";
+import API from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import MatchCard from "../components/MatchCard";
+import "./Matches.css";
 
-// We receive onSelect and selectedOnes from the parent (Matches.jsx)
-function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
+function Matches() {
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [phase, setPhase] = useState("betting");
+  const [countdown, setCountdown] = useState(60);
   
-  // Safely access nested properties
-  const homeTeam = match.homeTeam?.name || "Home";
-  const awayTeam = match.awayTeam?.name || "Away";
-  const homeStrength = match.homeTeam?.strength || 0;
-  const awayStrength = match.awayTeam?.strength || 0;
-  
-  // Safely access odds with defaults
-  const odds = match.odds || {};
-  const homeOdds = odds.home || 1.5;
-  const drawOdds = odds.draw || 3.5;
-  const awayOdds = odds.away || 1.5;
-  const over25 = odds.over25 || 1.8;
-  const under25 = odds.under25 || 1.9;
-  const ggOdds = odds.gg || 1.7;
-  const ngOdds = odds.ng || 1.8;
+  // ACCUMULATOR STATES
+  const [betSlip, setBetSlip] = useState([]);
+  const [stake, setStake] = useState("");
+  const { user, updateBalance } = useAuth();
 
-  // Helper to check if a specific button is currently selected in the slip
-  const isSelected = (type, prediction) => {
-    return selectedOnes.some(
-      (s) => s.matchId === match._id && s.betType === type && s.prediction === prediction
-    );
+  useEffect(() => {
+    fetchMatches();
+    const interval = setInterval(fetchMatches, 1000); 
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchMatches = async () => {
+    try {
+      const res = await API.get("/matches/current");
+      setMatches(res.data.data.matches || []);
+      setPhase(res.data.data.phase || "betting");
+      setCountdown(res.data.data.countdown || 60);
+    } catch (err) {
+      setError("Failed to load matches");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSelection = (betType, prediction, oddsValue) => {
-    if (!canBet || match.status !== "upcoming") return;
+  // HANDLES ADDING/REMOVING FROM SLIP
+  const toggleSelection = (selection) => {
+    setBetSlip(prev => {
+      // If clicking the same match + same prediction, remove it
+      const exists = prev.find(s => s.matchId === selection.matchId && s.prediction === selection.prediction);
+      if (exists) return prev.filter(s => !(s.matchId === selection.matchId && s.prediction === selection.prediction));
+      
+      // If clicking a different prediction for the same match, swap it
+      const sameMatch = prev.find(s => s.matchId === selection.matchId);
+      if (sameMatch) {
+        return prev.map(s => s.matchId === selection.matchId ? selection : s);
+      }
 
-    // Send the data to the parent component's slip instead of placing a bet immediately
-    onSelect({
-      matchId: match._id,
-      teams: `${homeTeam} vs ${awayTeam}`,
-      betType,
-      prediction,
-      odds: oddsValue
+      // Otherwise, add new selection
+      return [...prev, selection];
     });
   };
 
+  const calculateTotalOdds = () => {
+    return betSlip.reduce((acc, s) => acc * s.odds, 1).toFixed(2);
+  };
+
+  const handlePlaceBet = async () => {
+    if (betSlip.length === 0) return;
+    if (!stake || stake < 1) return alert("Please enter a valid stake");
+    if (parseFloat(stake) > user.balance) return alert("Insufficient balance!");
+
+    try {
+      const totalOdds = calculateTotalOdds();
+      const payload = {
+        selections: betSlip.map(s => ({
+          match: s.matchId,
+          betType: s.betType,
+          prediction: s.prediction,
+          odds: s.odds
+        })),
+        stake: parseFloat(stake),
+        totalOdds: parseFloat(totalOdds),
+        potentialWin: parseFloat(stake) * parseFloat(totalOdds)
+      };
+
+      const res = await API.post("/bets", payload);
+      
+      // Update UI
+      updateBalance(res.data.user.newBalance);
+      setBetSlip([]);
+      setStake("");
+      alert("🔥 Bet Placed! Good luck!");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to place bet");
+    }
+  };
+
+  if (loading) return <div className="loading">Loading Stadium...</div>;
+
   return (
-    <div className={`match-card ${match.status}`}>
-      <div className="match-teams">
-        <div className="team home">
-          <span className="team-name">{homeTeam}</span>
-          <span className="strength">STR: {homeStrength}</span>
-          {match.status === "finished" && (
-            <span className="score">{match.homeScore}</span>
-          )}
+    <div className="matches-container">
+      <div className="matches-page">
+        <div className="match-header">
+          <h2>EPL Virtual League</h2>
+          <div className={`phase-badge ${phase}`}>
+            {phase === "betting" ? `⏱️ Open: ${countdown}s` : `⚽ ${phase.toUpperCase()}`}
+          </div>
         </div>
-        
-        <div className="vs">
-          {match.status === "playing" ? <span className="live-badge">LIVE</span> : "VS"}
-          {match.status === "finished" && (
-            <div className="final-score">
-              {match.homeScore} - {match.awayScore}
+
+        {phase !== "betting" && (
+          <div className="phase-notice">
+            The whistle has blown! Betting is closed for this round.
+          </div>
+        )}
+
+        <div className="matches-grid">
+          {matches.map(match => (
+            <MatchCard 
+              key={match._id} 
+              match={match} 
+              canBet={phase === "betting"}
+              onSelect={toggleSelection}
+              selectedOnes={betSlip}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* FLOATING BET SLIP */}
+      {betSlip.length > 0 && (
+        <div className="bet-slip">
+          <div className="slip-header">
+            <h3>Bet Slip</h3>
+            <button className="clear-btn" onClick={() => setBetSlip([])}>Clear</button>
+          </div>
+          
+          <div className="slip-items">
+            {betSlip.map((s, idx) => (
+              <div key={idx} className="slip-item">
+                <div className="slip-item-top">
+                  <strong>{s.prediction.toUpperCase()}</strong>
+                  <span className="slip-odds">@{s.odds}</span>
+                </div>
+                <p>{s.teams}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="slip-footer">
+            <div className="summary-line">
+              <span>Total Odds:</span>
+              <strong>{calculateTotalOdds()}</strong>
             </div>
-          )}
-        </div>
-        
-        <div className="team away">
-          <span className="team-name">{awayTeam}</span>
-          <span className="strength">STR: {awayStrength}</span>
-          {match.status === "finished" && (
-            <span className="score">{match.awayScore}</span>
-          )}
-        </div>
-      </div>
-
-      <div className="odds-container">
-        {/* 1X2 Section */}
-        <div className="odds-section">
-          <h4>Match Result</h4>
-          <div className="odds-buttons">
+            {stake && (
+              <div className="summary-line win">
+                <span>Potential Win:</span>
+                <strong>${(stake * calculateTotalOdds()).toFixed(2)}</strong>
+              </div>
+            )}
+            <input 
+              type="number" 
+              placeholder="Stake Amount ($)" 
+              value={stake} 
+              onChange={(e) => setStake(e.target.value)}
+            />
             <button 
-              onClick={() => handleSelection("1X2", "home", homeOdds)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("1X2", "home") ? "active" : ""}`}
+              className="place-bet-btn" 
+              onClick={handlePlaceBet}
+              disabled={phase !== "betting"}
             >
-              <span className="label">1</span>
-              <span className="value">{homeOdds}</span>
-            </button>
-            <button 
-              onClick={() => handleSelection("1X2", "draw", drawOdds)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("1X2", "draw") ? "active" : ""}`}
-            >
-              <span className="label">X</span>
-              <span className="value">{drawOdds}</span>
-            </button>
-            <button 
-              onClick={() => handleSelection("1X2", "away", awayOdds)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("1X2", "away") ? "active" : ""}`}
-            >
-              <span className="label">2</span>
-              <span className="value">{awayOdds}</span>
+              PLACE {betSlip.length > 1 ? "ACCUMULATOR" : "BET"}
             </button>
           </div>
         </div>
-
-        {/* Goals Section */}
-        <div className="odds-section">
-          <h4>Goals (O/U 2.5)</h4>
-          <div className="odds-buttons">
-            <button 
-              onClick={() => handleSelection("OVER_UNDER", "over2.5", over25)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("OVER_UNDER", "over2.5") ? "active" : ""}`}
-            >
-              <span className="label">Over</span>
-              <span className="value">{over25}</span>
-            </button>
-            <button 
-              onClick={() => handleSelection("OVER_UNDER", "under2.5", under25)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("OVER_UNDER", "under2.5") ? "active" : ""}`}
-            >
-              <span className="label">Under</span>
-              <span className="value">{under25}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Both Teams to Score Section */}
-        <div className="odds-section">
-          <h4>BTTS</h4>
-          <div className="odds-buttons">
-            <button 
-              onClick={() => handleSelection("GG_NG", "gg", ggOdds)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("GG_NG", "gg") ? "active" : ""}`}
-            >
-              <span className="label">Yes</span>
-              <span className="value">{ggOdds}</span>
-            </button>
-            <button 
-              onClick={() => handleSelection("GG_NG", "ng", ngOdds)}
-              disabled={!canBet || match.status !== "upcoming"}
-              className={`odd-btn ${isSelected("GG_NG", "ng") ? "active" : ""}`}
-            >
-              <span className="label">No</span>
-              <span className="value">{ngOdds}</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
 
-export default MatchCard;
-            
+export default Matches;
+         
