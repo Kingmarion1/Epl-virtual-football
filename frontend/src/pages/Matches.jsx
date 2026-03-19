@@ -76,7 +76,7 @@ function Matches() {
         potentialWin: parseFloat(stake) * parseFloat(totalOdds)
       };
 
-      const res = await API.post("/bets", payload);
+      const res = await API.post("/bets/place", payload);
       
       // Update UI
       updateBalance(res.data.user.newBalance);
