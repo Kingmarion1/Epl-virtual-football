@@ -71,9 +71,9 @@ function Matches() {
           prediction: s.prediction,
           odds: s.odds
         })),
-        stake: parseFloat(stake),
-        totalOdds: parseFloat(totalOdds),
-        potentialWin: parseFloat(stake) * parseFloat(totalOdds)
+        stake: Number(stake),
+        totalOdds: Number(totalOdds),
+        potentialWin: Number(stake) * Number(totalOdds)
       };
 
       const res = await API.post("/bets/place", payload);
