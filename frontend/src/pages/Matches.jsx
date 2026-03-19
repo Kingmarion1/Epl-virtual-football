@@ -66,7 +66,7 @@ function Matches() {
       const totalOdds = calculateTotalOdds();
       const payload = {
         selections: betSlip.map(s => ({
-          match: s.matchId,
+          match: s.match,
           betType: s.betType,
           prediction: s.prediction,
           odds: s.odds
@@ -84,10 +84,11 @@ function Matches() {
       setStake("");
       alert("🔥 Bet Placed! Good luck!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to place bet");
-    }
-  };
-
+    // This will tell us EXACTLY what the backend didn't like
+    alert(`Error: ${err.response?.data?.message || "Something went wrong"}`);
+  }
+};
+  
   if (loading) return <div className="loading">Loading Stadium...</div>;
 
   return (
