@@ -80,7 +80,7 @@ function Matches() {
         potentialWin: Number((Number(stake) * totalOdds).toFixed(2))
       };
 
-      const res = await API.post("/bets", payload);
+      const res = await API.post("/bets/place", payload);
       
       updateBalance(res.data.user.newBalance);
       setBetSlip([]);
