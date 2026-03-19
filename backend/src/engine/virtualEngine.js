@@ -39,37 +39,38 @@ const determineBetResult = (bet, match) => {
 
 const settleBetsForWeek = async (week) => {
   try {
-    console.log(`💰 Settling bets for week ${week}...`);
+    // 1. Correct the populate path to reach inside the selections array
     const pendingBets = await Bet.find({ status: "pending" })
-      .populate("match")
+      .populate("selections.match") 
       .populate("user");
 
-    if (pendingBets.length === 0) return { settled: 0 };
-    
     const settlementPromises = pendingBets.map(async (bet) => {
-  // 1. Check if ALL matches in this bet are finished
-    const allMatchesFinished = bet.selections.every(s => s.match && s.match.status === "finished");
-  
-  // 2. Only process if the whole ticket is ready
-    if (!allMatchesFinished) return;
+      // Check if matches in this bet are finished
+      const allFinished = bet.selections.every(s => s.match && s.match.status === "finished");
+      if (!allFinished) return;
 
-  // 3. Check every selection in the accumulator
-    const allSelectionsWon = bet.selections.every(selection => {
-    return determineBetResult(selection, selection.match);
-  });
+      // Every selection must win for the ticket to win
+      const isTicketWin = bet.selections.every(selection => {
+        return determineBetResult(selection, selection.match);
+      });
 
-  // 4. Update the bet status
-  if (allSelectionsWon) {
-    bet.status = "won";
-    bet.user.balance += bet.potentialWin;
-    bet.user.wins += 1;
-  } else {
-    bet.status = "lost";
-    bet.user.losses += 1;
+      if (isTicketWin) {
+        bet.status = "won";
+        bet.user.balance += bet.potentialWin;
+        bet.user.wins += 1;
+      } else {
+        bet.status = "lost";
+        bet.user.losses += 1;
+      }
+
+      return Promise.all([bet.user.save(), bet.save()]);
+    });
+
+    await Promise.all(settlementPromises);
+  } catch (error) {
+    console.error("Settlement Error:", error);
   }
-
-  return Promise.all([bet.user.save(), bet.save()]);
-});
+};
 
     const results = await Promise.all(settlementPromises);
     const settledCount = results.filter(r => r !== undefined).length;
