@@ -2,19 +2,20 @@ const SeasonState = require("../models/SeasonState");
 const Match = require("../models/Match");
 const Bet = require("../models/Bet");
 const User = require("../models/User");
+const Team = require("../models/Team"); // FIXED: Added missing import
 const simulateWeek = require("./matchEngine");
 const generateSeason = require("./seasonGenerator");
 
 // Configuration
 const CONFIG = {
-  BETTING_DURATION: 60, // seconds
-  RESULTS_DURATION: 10, // seconds
+  BETTING_DURATION: 60, 
+  RESULTS_DURATION: 10, 
+  TICK_INTERVAL: 1000, // 1 second
   AUTO_RESTART: true
 };
 
 const determineBetResult = (bet, match) => {
-  const home = match.homeScore;
-  const away = match.awayScore;
+  const { homeScore: home, awayScore: away } = match;
   
   switch(bet.betType) {
     case "1X2":
@@ -22,199 +23,148 @@ const determineBetResult = (bet, match) => {
       if (bet.prediction === "draw" && home === away) return true;
       if (bet.prediction === "away" && away > home) return true;
       return false;
-      
     case "OVER_UNDER":
       const total = home + away;
       const threshold = parseFloat(bet.prediction.replace(/[^0-9.]/g, ""));
       if (bet.prediction.startsWith("over") && total > threshold) return true;
       if (bet.prediction.startsWith("under") && total < threshold) return true;
       return false;
-      
     case "GG_NG":
       if (bet.prediction === "gg" && home > 0 && away > 0) return true;
       if (bet.prediction === "ng" && (home === 0 || away === 0)) return true;
       return false;
-      
-    default:
-      return false;
+    default: return false;
   }
 };
 
 const settleBetsForWeek = async (week) => {
   try {
     console.log(`💰 Settling bets for week ${week}...`);
-    
     const pendingBets = await Bet.find({ status: "pending" })
       .populate("match")
       .populate("user");
 
-    let settled = 0;
-    let won = 0;
-    let lost = 0;
+    if (pendingBets.length === 0) return { settled: 0 };
 
-    for (const bet of pendingBets) {
-      try {
-        // Only settle bets for this week's matches
-        if (!bet.match || bet.match.matchweek !== week) continue;
-        if (bet.match.status !== "finished") continue;
+    const settlementPromises = pendingBets.map(async (bet) => {
+      // Safety checks
+      if (!bet.match || bet.match.matchweek !== week || bet.match.status !== "finished") return;
 
-        const isWin = determineBetResult(bet, bet.match);
-        
-        if (isWin) {
-          bet.status = "won";
-          bet.user.balance += bet.potentialWin;
-          bet.user.wins += 1;
-          won++;
-        } else {
-          bet.status = "lost";
-          bet.user.losses += 1;
-          lost++;
-        }
-
-        await bet.user.save();
-        await bet.save();
-        settled++;
-
-      } catch (betError) {
-        console.error(`Error settling bet ${bet._id}:`, betError);
-        continue;
+      const isWin = determineBetResult(bet, bet.match);
+      
+      if (isWin) {
+        bet.status = "won";
+        bet.user.balance += bet.potentialWin;
+        bet.user.wins += 1;
+      } else {
+        bet.status = "lost";
+        bet.user.losses += 1;
       }
-    }
 
-    console.log(`✅ Settled ${settled} bets (${won} won, ${lost} lost)`);
-    return { settled, won, lost };
+      // Save both documents in parallel for speed
+      return Promise.all([bet.user.save(), bet.save()]);
+    });
 
+    const results = await Promise.all(settlementPromises);
+    const settledCount = results.filter(r => r !== undefined).length;
+    
+    console.log(`✅ Settled ${settledCount} bets for week ${week}`);
+    return { settled: settledCount };
   } catch (error) {
     console.error("❌ Bet settlement failed:", error);
-    throw error;
   }
 };
 
 const resetSeason = async () => {
-  console.log("🔄 Resetting season...");
-  
-  await Match.updateMany({}, {
-    status: "upcoming",
-    homeScore: 0,
-    awayScore: 0
-  });
-  
-  await Team.updateMany({}, {
-    played: 0, wins: 0, draws: 0, losses: 0,
-    goalsFor: 0, goalsAgainst: 0, goalDifference: 0, points: 0
-  });
-  
-  console.log("✅ Season reset complete");
+  console.log("🔄 Resetting season stats...");
+  try {
+    // Reset all matches to upcoming
+    await Match.updateMany({}, { status: "upcoming", homeScore: 0, awayScore: 0 });
+    
+    // Reset all team standings to zero - FIXES THE 598 GAMES PROBLEM
+    await Team.updateMany({}, {
+      played: 0, wins: 0, draws: 0, losses: 0,
+      goalsFor: 0, goalsAgainst: 0, goalDifference: 0, points: 0
+    });
+    
+    console.log("✅ Season reset complete");
+  } catch (err) {
+    console.error("❌ Reset Season Failed:", err);
+  }
 };
 
 const startVirtualEngine = async () => {
   console.log("🎮 Starting Virtual Engine...");
   
   try {
-    // Initialize or get season state
-    let state = await SeasonState.findOne();
-    
-    if (!state) {
-      console.log("🆕 Creating new season state...");
-      state = await SeasonState.create({
-        currentWeek: 1,
-        phase: "betting",
-        countdown: CONFIG.BETTING_DURATION,
-        seasonStarted: false
-      });
-    }
+    let state = await SeasonState.findOne() || await SeasonState.create({
+      currentWeek: 1, phase: "betting", countdown: CONFIG.BETTING_DURATION, seasonStarted: false
+    });
 
-    // Generate season if needed
     if (!state.seasonStarted) {
-      console.log("🏗️ Initializing season...");
       await generateSeason();
       state.seasonStarted = true;
       await state.save();
     }
 
-    console.log(`📅 Week ${state.currentWeek} | Phase: ${state.phase} | Countdown: ${state.countdown}`);
-
-    // Main game loop (runs every second)
-    setInterval(async () => {
+    // SAFE TICK SYSTEM: Replaces setInterval to prevent ParallelSaveError
+    const runTick = async () => {
       try {
+        // Refresh state from DB to ensure we have latest data
         state = await SeasonState.findOne();
         
-        if (!state) {
-          console.error("❌ Season state lost!");
-          return;
-        }
-
-        // BETTING PHASE
+        // 1. BETTING PHASE
         if (state.phase === "betting") {
           state.countdown -= 1;
-          
           if (state.countdown <= 0) {
-            console.log("⏰ Betting closed! Starting matches...");
             state.phase = "playing";
             state.countdown = CONFIG.RESULTS_DURATION;
           }
-          
-          await state.save();
         }
         
-        // PLAYING PHASE
+        // 2. PLAYING PHASE
         else if (state.phase === "playing") {
-          console.log(`🏃 Simulating week ${state.currentWeek}...`);
-          
           const result = await simulateWeek(state.currentWeek);
-          
-          if (result.simulated > 0) {
-            state.phase = "results";
-            state.countdown = CONFIG.RESULTS_DURATION;
-            console.log("✅ Matches complete! Showing results...");
-          } else {
-            // No matches to simulate, skip to next week
-            state.phase = "results";
-            state.countdown = 0;
-          }
-          
-          await state.save();
+          state.phase = "results";
+          state.countdown = CONFIG.RESULTS_DURATION;
         }
         
-        // RESULTS PHASE
+        // 3. RESULTS PHASE
         else if (state.phase === "results") {
-          // Settle bets first
           await settleBetsForWeek(state.currentWeek);
-          
           state.countdown -= 1;
           
           if (state.countdown <= 0) {
-            // Advance to next week
             state.currentWeek += 1;
             
-            // Check season end
+            // SEASON END CHECK (The 38-week cap)
             if (state.currentWeek > 38) {
-              console.log("🏆 Season complete! Restarting...");
-              state.currentWeek = 1;
               await resetSeason();
+              state.currentWeek = 1;
             }
             
             state.phase = "betting";
             state.countdown = CONFIG.BETTING_DURATION;
-            console.log(`📅 Starting Week ${state.currentWeek}`);
           }
-          
-          await state.save();
         }
 
-      } catch (loopError) {
-        console.error("❌ Engine loop error:", loopError);
-        // Don't crash - continue running
+        await state.save(); // Now safe because only one tick runs at a time
+        
+      } catch (err) {
+        console.error("❌ Tick Error:", err.message);
+      } finally {
+        // Schedule the next tick ONLY after this one finishes
+        setTimeout(runTick, CONFIG.TICK_INTERVAL);
       }
-      
-    }, 1000); // Run every second
+    };
 
-    console.log("✅ Virtual Engine running (1-second ticks)");
+    runTick(); // Trigger the first tick
+    console.log("✅ Virtual Engine initialized safely.");
 
   } catch (error) {
     console.error("❌ Failed to start engine:", error);
-    throw error;
   }
 };
 
 module.exports = startVirtualEngine;
+    
