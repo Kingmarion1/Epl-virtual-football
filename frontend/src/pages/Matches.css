@@ -121,3 +121,30 @@
     position: static;
   }
   }
+
+.slip-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.remove-item-btn {
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff4d4d;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.remove-item-btn:hover {
+  background: #ff4d4d;
+  color: white;
+  }
+  
