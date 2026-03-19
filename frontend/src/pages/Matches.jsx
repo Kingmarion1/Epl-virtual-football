@@ -60,7 +60,7 @@ function Matches() {
   const handlePlaceBet = async () => {
     if (betSlip.length === 0) return;
     if (!stake || stake < 1) return alert("Please enter a valid stake");
-    if (parseFloat(stake) > user.balance) return alert("Insufficient balance!");
+    if (Number(stake) > user.balance) return alert("Insufficient balance!");
 
     try {
       const totalOdds = calculateTotalOdds();
