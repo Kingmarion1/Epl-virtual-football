@@ -1,75 +1,126 @@
-.matches-page {
-  padding: 20px 0;
+/* Keep your existing .matches-page, .match-header, and .matches-grid styles */
+
+.matches-container {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  min-height: 100vh;
 }
 
-.match-header {
+.matches-page {
+  flex: 1; /* This lets the matches take up the main space */
+  padding: 20px 0;
+  transition: all 0.3s ease;
+}
+
+/* THE FLOATING BET SLIP */
+.bet-slip {
+  width: 350px;
+  background: #1a2235; /* Deep blue to match your theme */
+  border-left: 2px solid var(--primary);
+  padding: 20px;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+  border-radius: 15px 0 0 15px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.slip-items {
+  flex: 1;
+  overflow-y: auto;
+  margin: 15px 0;
+}
+
+.slip-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.slip-item span {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.slip-item strong {
+  color: var(--warning);
+  font-size: 1rem;
+}
+
+.slip-footer {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 15px;
+}
+
+.slip-footer p {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding: 0 10px;
 }
 
-.match-header h2 {
+.slip-footer input {
+  width: 100%;
+  padding: 12px;
+  background: #0d1117;
+  border: 1px solid #30363d;
   color: white;
-  font-size: 2rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-size: 1rem;
 }
 
-.phase-badge {
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-}
-
-.phase-badge.betting {
+.place-bet-btn {
+  width: 100%;
+  padding: 15px;
   background: var(--success);
   color: white;
-  animation: pulse 2s infinite;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.phase-badge.playing {
-  background: var(--warning);
-  color: #333;
+.place-bet-btn:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
-.phase-badge.results {
-  background: var(--info);
-  color: white;
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-.phase-notice {
-  background: rgba(255, 193, 7, 0.2);
-  border: 2px solid var(--warning);
-  color: white;
-  padding: 15px;
-  border-radius: 10px;
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 500;
-}
-
-.matches-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 20px;
-}
-
-@media (max-width: 768px) {
-  .matches-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .match-header {
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 1024px) {
+  .matches-container {
     flex-direction: column;
-    gap: 15px;
-    text-align: center;
   }
+
+  .bet-slip {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    max-height: 50vh;
+    top: auto;
+    border-left: none;
+    border-top: 3px solid var(--primary);
+    border-radius: 20px 20px 0 0;
+    z-index: 1000;
   }
+    }
