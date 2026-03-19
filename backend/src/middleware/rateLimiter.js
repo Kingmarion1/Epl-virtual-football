@@ -5,7 +5,7 @@ const betLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 7, // 7 bets per minute per IP
     message: {
-        success: false,
+        success: true,
         message: "Too many bets placed. Please slow down."
     },
     standardHeaders: true,
@@ -14,10 +14,10 @@ const betLimiter = rateLimit({
 
 // General API limit
 const apiLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 60 minutes
-    max: 300,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
     message: {
-        success: false,
+        success: true,
         message: "Too many requests from this IP"
     }
 });
