@@ -3,13 +3,13 @@ import "./MatchCard.css";
 
 // We receive onSelect and selectedOnes from the parent (Matches.jsx)
 function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
-  
+
   // Safely access nested properties
   const homeTeam = match.homeTeam?.name || "Home";
   const awayTeam = match.awayTeam?.name || "Away";
   const homeStrength = match.homeTeam?.strength || 0;
   const awayStrength = match.awayTeam?.strength || 0;
-  
+
   // Safely access odds with defaults
   const odds = match.odds || {};
   const homeOdds = odds.home || 1.5;
@@ -20,19 +20,24 @@ function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
   const ggOdds = odds.gg || 1.7;
   const ngOdds = odds.ng || 1.8;
 
-  // Helper to check if a specific button is currently selected in the slip
+  // HELPER: Checks if this specific bet is in the slip
+  // Updated to check for both 'match' and 'matchId' for bulletproof matching
   const isSelected = (type, prediction) => {
     return selectedOnes.some(
-      (s) => s.matchId === match._id && s.betType === type && s.prediction === prediction
+      (s) => (s.match === match._id || s.matchId === match._id) && 
+             s.betType === type && 
+             s.prediction === prediction
     );
   };
 
   const handleSelection = (betType, prediction, oddsValue) => {
+    // Prevent betting if match started or phase is closed
     if (!canBet || match.status !== "upcoming") return;
 
-    // Send the data to the parent component's slip instead of placing a bet immediately
+    // Send the data to the parent (Matches.jsx)
     onSelect({
-      matchId: match._id,
+      match: match._id,       // PRIMARY ID (Backend needs this)
+      matchId: match._id,     // BACKUP ID (For frontend logic)
       teams: `${homeTeam} vs ${awayTeam}`,
       betType,
       prediction,
@@ -50,7 +55,7 @@ function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
             <span className="score">{match.homeScore}</span>
           )}
         </div>
-        
+
         <div className="vs">
           {match.status === "playing" ? <span className="live-badge">LIVE</span> : "VS"}
           {match.status === "finished" && (
@@ -59,7 +64,7 @@ function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
             </div>
           )}
         </div>
-        
+
         <div className="team away">
           <span className="team-name">{awayTeam}</span>
           <span className="strength">STR: {awayStrength}</span>
@@ -70,7 +75,7 @@ function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
       </div>
 
       <div className="odds-container">
-        {/* 1X2 Section */}
+        {/* Match Result Section */}
         <div className="odds-section">
           <h4>Match Result</h4>
           <div className="odds-buttons">
@@ -152,4 +157,3 @@ function MatchCard({ match, canBet, onSelect, selectedOnes = [] }) {
 }
 
 export default MatchCard;
-          
