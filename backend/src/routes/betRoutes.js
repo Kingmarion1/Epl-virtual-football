@@ -14,7 +14,7 @@ router.post("/place", protect, async (req, res) => {
   try {
     let { selections, stake } = req.body;
 
-    // Fix for legacy single bet format
+    // Support for both naming conventions to prevent 'undefined'
     if (!selections && (req.body.matchId || req.body.match)) {
       selections = [{
         matchId: req.body.matchId || req.body.match,
@@ -47,8 +47,7 @@ router.post("/place", protect, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Insufficient balance",
-        balance: user.balance,
-        required: stake
+        balance: user.balance
       });
     }
 
@@ -56,15 +55,12 @@ router.post("/place", protect, async (req, res) => {
     const validatedSelections = [];
 
     for (const sel of selections) {
-      // BULLETPROOF FIX: Check both 'matchId' and 'match' keys
+      // BULLETPROOF: Check both possible ID keys from frontend
       const idToFind = sel.matchId || sel.match; 
       
       if (!idToFind) {
         await session.abortTransaction();
-        return res.status(400).json({
-          success: false,
-          message: "Selection is missing a valid match ID"
-        });
+        return res.status(400).json({ success: false, message: "Selection missing match ID" });
       }
 
       const match = await Match.findById(idToFind).session(session);
@@ -73,7 +69,7 @@ router.post("/place", protect, async (req, res) => {
         await session.abortTransaction();
         return res.status(404).json({
           success: false,
-          message: `Match not found: ${idToFind}` // This is what shows 'undefined' if idToFind is empty
+          message: `Match not found: ${idToFind}`
         });
       }
 
@@ -81,34 +77,34 @@ router.post("/place", protect, async (req, res) => {
         await session.abortTransaction();
         return res.status(400).json({
           success: false,
-          message: `Match is not open for betting (status: ${match.status})`
+          message: `Betting closed for match: ${match._id}`
         });
       }
 
-      // Verify odds logic (checking both backend field names)
+      // VALIDATE ODDS AGAINST YOUR SCHEMA
       let actualOdds;
-      const mOdds = match.odds || {}; // Supporting nested odds if you have them
-      
       switch(sel.betType) {
         case "1X2":
-          if (sel.prediction === "home") actualOdds = match.homeOdds || mOdds.home;
-          else if (sel.prediction === "draw") actualOdds = match.drawOdds || mOdds.draw;
-          else if (sel.prediction === "away") actualOdds = match.awayOdds || mOdds.away;
+          if (sel.prediction === "home") actualOdds = match.homeOdds;
+          else if (sel.prediction === "draw") actualOdds = match.drawOdds;
+          else if (sel.prediction === "away") actualOdds = match.awayOdds;
           break;
         case "OVER_UNDER":
-          if (sel.prediction === "over2.5") actualOdds = match.over25 || mOdds.over25;
-          else if (sel.prediction === "under2.5") actualOdds = match.under25 || mOdds.under25;
+          if (sel.prediction === "over2.5") actualOdds = match.over25;
+          else if (sel.prediction === "under2.5") actualOdds = match.under25;
+          else if (sel.prediction === "over1.5") actualOdds = match.over15;
+          else if (sel.prediction === "under1.5") actualOdds = match.under15;
           break;
         case "GG_NG":
-          if (sel.prediction === "gg") actualOdds = match.ggOdds || mOdds.gg;
-          else if (sel.prediction === "ng") actualOdds = match.ngOdds || mOdds.ng;
+          if (sel.prediction === "gg") actualOdds = match.ggOdds;
+          else if (sel.prediction === "ng") actualOdds = match.ngOdds;
           break;
       }
 
-      // If odds validation is too strict and causing issues, you can temporarily 
-      // log this instead of returning an error to debug
+      // Safeguard: If odds aren't found in DB, use the odds from frontend 
+      // (Or keep the error if you want strict validation)
       if (!actualOdds) {
-          actualOdds = sel.odds; // Fallback to provided odds if backend check fails
+        actualOdds = sel.odds;
       }
 
       totalOdds *= actualOdds;
