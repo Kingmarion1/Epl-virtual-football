@@ -14,6 +14,7 @@ import Navbar from "./components/Navbar";
 import BalanceBar from "./components/BalanceBar";
 import BetSlip from "./components/BetSlip";
 import ProtectedRoute from "./components/ProtectedRoute";
+import NotFound from "./components/NotFound";
 
 import "./App.css";
 
@@ -28,6 +29,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              
               <Route 
                 path="/" 
                 element={
@@ -60,7 +62,10 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              <Route path="*" element={<Navigate to="/" replace />} />
+
+              {/* Catch-all route for broken links */}
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </main>
           <BetSlip />
@@ -71,3 +76,4 @@ function App() {
 }
 
 export default App;
+                    
